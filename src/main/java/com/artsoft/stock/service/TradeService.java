@@ -9,5 +9,5 @@ import java.util.Map;
 
 public interface TradeService {
 
-    void matchShareOrder(Share share);
+    void processedShareOrder(Share share, ShareOrder buyShareOrder, ShareOrder sellShareOrder);
 }

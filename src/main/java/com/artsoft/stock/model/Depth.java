@@ -1,12 +1,15 @@
 package com.artsoft.stock.model;
 
 import com.artsoft.stock.dto.Share;
+import com.artsoft.stock.dto.ShareOrder;
 import com.artsoft.stock.util.MathOperation;
 import lombok.*;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 @AllArgsConstructor
 @NoArgsConstructor

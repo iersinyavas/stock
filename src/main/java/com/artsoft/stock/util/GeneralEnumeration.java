@@ -9,7 +9,7 @@ public class GeneralEnumeration {
     protected GeneralEnumeration(){};
 
     public enum ShareEnum{
-        AAA, BBB/*, CCC, DDD, EEE*/;
+        ALPHA/*, BETA, GAMMA*/;
 
         String code;
         private double price;
@@ -34,7 +34,7 @@ public class GeneralEnumeration {
     }
 
     public enum ShareOrderOperationStatus{
-        SENT, RECEIVED, PROCESSING, REMOVE;
+        SENT, RECEIVED, PROCESSING, REMOVE, REMAINING;
     }
 
     public enum BuyOrSell{

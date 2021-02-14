@@ -13,9 +13,11 @@ import com.artsoft.stock.service.impl.ShareOrderServiceImpl;
 import com.artsoft.stock.util.GeneralEnumeration;
 import com.artsoft.stock.util.GeneralEnumeration.ShareOrderOperationStatus;
 import com.artsoft.stock.util.GeneralEnumeration.ShareEnum;
+import com.artsoft.stock.util.MathOperation;
 import com.artsoft.stock.util.exception.InsufficientBalanceException;
 import com.artsoft.stock.util.exception.NotHaveShareException;
 import com.artsoft.stock.util.exception.WrongLotInformationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -27,6 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
+@Slf4j
 public class StockApplication implements CommandLineRunner {
 
     @Autowired
@@ -41,18 +44,15 @@ public class StockApplication implements CommandLineRunner {
     private static int id = 0;
 
     @PostConstruct
-    public void init(){
-        Database.shareMap.put(ShareEnum.AAA, new Share(ShareEnum.AAA, 1.0));
-        Database.shareMap.put(ShareEnum.BBB, new Share(ShareEnum.BBB, 1.0));
-        /*Database.shareMap.put(ShareEnum.CCC, new Share(ShareEnum.CCC, 1.0, 1.0, 1.01));
-        Database.shareMap.put(ShareEnum.DDD, new Share(ShareEnum.DDD, 1.0, 1.0, 1.01));
-        Database.shareMap.put(ShareEnum.EEE, new Share(ShareEnum.EEE, 1.0, 1.0, 1.01));*/
+    public void init() {
+        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.0));
+        /*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
+        Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*/
 
-        Database.shareMap.get(ShareEnum.AAA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.AAA));
-        Database.shareMap.get(ShareEnum.BBB).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BBB));
-        /*Database.shareMap.get(ShareEnum.CCC).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.CCC));
-        Database.shareMap.get(ShareEnum.DDD).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.DDD));
-        Database.shareMap.get(ShareEnum.EEE).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.EEE));*/
+        Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
+        /*Database.shareMap.get(ShareEnum.BETA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BETA));
+        Database.shareMap.get(ShareEnum.GAMMA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.GAMMA));*/
+        shareService.setShareStartPrice(Database.shareMap.get(ShareEnum.ALPHA));
 
     }
 
@@ -67,17 +67,30 @@ public class StockApplication implements CommandLineRunner {
             Database.customerMap.put("A", customer);
             while (true) {
                 try {
-                    Thread.sleep(random.nextInt(10000));
+                    Thread.sleep(2000 + random.nextInt(3000));
                     ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
                     shareOrder.setId(idPlus());
-                    if ((shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() > Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice())
-                            || (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() < Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice())){
-                        shareOrderService.immediatelyShareOrder(shareOrder);
-                    }else {
-                        //put(shareOrder);
-                        shareOrderService.decomposeShareOrder(shareOrder);
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
                     }
-                    //System.out.println(shareOrder);
                 } catch (InterruptedException ex) {
 
                 } catch (WrongLotInformationException ex) {
@@ -96,17 +109,30 @@ public class StockApplication implements CommandLineRunner {
             Database.customerMap.put("B", customer);
             while (true) {
                 try {
-                    Thread.sleep(random.nextInt(10000));
+                    Thread.sleep(2000 + random.nextInt(3000));
                     ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
                     shareOrder.setId(idPlus());
-                    if ((shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() > Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice())
-                            || (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() < Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice())){
-                        shareOrderService.immediatelyShareOrder(shareOrder);
-                    }else {
-                        //put(shareOrder);
-                        shareOrderService.decomposeShareOrder(shareOrder);
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
                     }
-                    //System.out.println(shareOrder);
                 } catch (InterruptedException ex) {
 
                 } catch (WrongLotInformationException ex) {
@@ -124,17 +150,30 @@ public class StockApplication implements CommandLineRunner {
 
             while (true) {
                 try {
-                    Thread.sleep(random.nextInt(10000));
+                    Thread.sleep(2000 + random.nextInt(3000));
                     ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
                     shareOrder.setId(idPlus());
-                    if ((shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() > Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice())
-                            || (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() < Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice())){
-                        shareOrderService.immediatelyShareOrder(shareOrder);
-                    }else {
-                        //put(shareOrder);
-                        shareOrderService.decomposeShareOrder(shareOrder);
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
                     }
-                    //System.out.println(shareOrder);
                 } catch (InterruptedException ex) {
 
                 } catch (WrongLotInformationException ex) {
@@ -151,17 +190,30 @@ public class StockApplication implements CommandLineRunner {
             Database.customerMap.put("D", customer);
             while (true) {
                 try {
-                    Thread.sleep(random.nextInt(10000));
+                    Thread.sleep(2000 + random.nextInt(3000));
                     ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
                     shareOrder.setId(idPlus());
-                    if ((shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() > Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice())
-                            || (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() < Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice())){
-                        shareOrderService.immediatelyShareOrder(shareOrder);
-                    }else {
-                        //put(shareOrder);
-                        shareOrderService.decomposeShareOrder(shareOrder);
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
                     }
-                    //System.out.println(shareOrder);
                 } catch (InterruptedException ex) {
 
                 } catch (WrongLotInformationException ex) {
@@ -178,17 +230,30 @@ public class StockApplication implements CommandLineRunner {
             Database.customerMap.put("E", customer);
             while (true) {
                 try {
-                    Thread.sleep(random.nextInt(10000));
+                    Thread.sleep(2000 + random.nextInt(3000));
                     ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
                     shareOrder.setId(idPlus());
-                    if ((shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() > Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice())
-                            || (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() < Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice())){
-                        shareOrderService.immediatelyShareOrder(shareOrder);
-                    }else {
-                        //put(shareOrder);
-                        shareOrderService.decomposeShareOrder(shareOrder);
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
                     }
-                    //System.out.println(shareOrder);
                 } catch (InterruptedException ex) {
 
                 } catch (WrongLotInformationException ex) {
@@ -201,123 +266,438 @@ public class StockApplication implements CommandLineRunner {
             }
         });
 
-        Thread decomposeShareOrder = new Thread(() -> {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
-            }
-            while (true){
-                try {
-                    Thread.sleep(100);
-                    ShareOrder shareOrder = Database.shareOrderQueue.take();
-                    shareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
-                    shareOrderService.decomposeShareOrder(shareOrder);
-                } catch (InterruptedException ex) {
-
-                }
-            }
-        });
-
-        Thread matchShareOrderA = new Thread(() -> {
-            Share share = Database.shareMap.get(ShareEnum.AAA);
-            shareService.setShareStartPrice(share);
+        Thread f = new Thread(() -> {
+            Customer customer = createCustomer("F");
+            Database.customerMap.put("F", customer);
             while (true) {
                 try {
-                    Thread.sleep(1000);
-                    tradeService.matchShareOrder(share);
-                    System.out.println("A Hissesi ===> Alış : " + share.getBuyPrice() + " --- " + "Satış : " + share.getSellPrice());
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
                 }
             }
-
         });
 
-       Thread matchShareOrderB = new Thread(() -> {
-           Share share = Database.shareMap.get(ShareEnum.BBB);
-           shareService.setShareStartPrice(share);
-            while(true) {
+        Thread g = new Thread(() -> {
+            Customer customer = createCustomer("G");
+            Database.customerMap.put("G", customer);
+            while (true) {
                 try {
-                    Thread.sleep(1000);
-                    tradeService.matchShareOrder(share);
-                    System.out.println("B Hissesi ===> Alış : " + share.getBuyPrice() + " --- " + "Satış : " + share.getSellPrice());
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
                 }
             }
-
         });
 
-        /*Thread matchShareOrderC = new Thread(() -> {
-
-            while(true) {
+        Thread h = new Thread(() -> {
+            Customer customer = createCustomer("H");
+            Database.customerMap.put("H", customer);
+            while (true) {
                 try {
-                    Thread.sleep(1000);
-                    shareOrderService.matchShareOrderThread(MarketUtil.cBuyShareOrderMap, MarketUtil.cSellShareOrderMap);
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
                 }
             }
-
         });
 
-        Thread matchShareOrderD = new Thread(() -> {
-
-            while(true) {
+        Thread i = new Thread(() -> {
+            Customer customer = createCustomer("I");
+            Database.customerMap.put("I", customer);
+            while (true) {
                 try {
-                    Thread.sleep(1000);
-                    shareOrderService.matchShareOrderThread(MarketUtil.dBuyShareOrderMap, MarketUtil.dSellShareOrderMap);
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
                 }
             }
-
         });
 
-        Thread matchShareOrderE = new Thread(() -> {
-
-            while(true) {
+        Thread j = new Thread(() -> {
+            Customer customer = createCustomer("J");
+            Database.customerMap.put("J", customer);
+            while (true) {
                 try {
-                    Thread.sleep(1000);
-                    shareOrderService.matchShareOrderThread(MarketUtil.eBuyShareOrderMap, MarketUtil.eSellShareOrderMap);
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
                 }
             }
-
         });
-*/
+
+        Thread k = new Thread(() -> {
+            Customer customer = createCustomer("K");
+            Database.customerMap.put("K", customer);
+            while (true) {
+                try {
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
+                } catch (InterruptedException ex) {
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
+                }
+            }
+        });
+
+        Thread l = new Thread(() -> {
+            Customer customer = createCustomer("L");
+            Database.customerMap.put("L", customer);
+            while (true) {
+                try {
+                    Thread.sleep(2000 + random.nextInt(3000));
+                    ShareOrder shareOrder = shareOrderService.createShareOrder(customer);
+                    shareOrder.setId(idPlus());
+                    Share share = Database.shareMap.get(shareOrder.getShareEnum());
+
+                    /*if (shareOrderService.isProcessedImmediately(shareOrder)){
+                        if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)){
+                            shareOrder.setPrice(share.getSellPrice());
+                        }else {
+                            shareOrder.setPrice(share.getBuyPrice());
+                        }
+                    }*/
+
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
+                } catch (InterruptedException ex) {
+
+                } catch (WrongLotInformationException ex) {
+
+                } catch (InsufficientBalanceException ex) {
+
+                } catch (NotHaveShareException ex) {
+
+                }
+            }
+        });
+
+        Thread processedBuyLevelShareOrders = new Thread(() -> {
+            Share share = Database.shareMap.get(ShareEnum.ALPHA);
+            Level buyLevel;
+            Level sellLevel;
+            while (true) {
+                try {
+                    Thread.sleep(500);
+                    buyLevel = share.getDepth().getLevelMap().get(share.getBuyPrice());
+                    sellLevel = share.getDepth().getLevelMap().get(share.getSellPrice());
+                    int buy = 0;
+
+                    if (!buyLevel.getBuyShareOrderQueue().isEmpty() && !buyLevel.getSellShareOrderQueue().isEmpty()) {
+                        ShareOrder buyShareOrder = buyLevel.getBuyShareOrderQueue().take();
+                        ShareOrder sellShareOrder = buyLevel.getSellShareOrderQueue().take();
+
+                        if (buyLevel.getBuyLotQuantity() >= sellShareOrder.getLot()) {
+                            tradeService.processedShareOrder(share, buyShareOrder, sellShareOrder);
+
+                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
+                                buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                buyLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            }
+                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
+                                sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                buyLevel.getSellShareOrderQueue().put(sellShareOrder);
+                            }
+
+                            buyLevel.setBuyLotQuantity(buyLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            buyLevel.setBuyShareOrderQuantity(buyLevel.getBuyShareOrderQueue().size());
+
+                            buyLevel.setSellLotQuantity(buyLevel.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            buyLevel.setSellShareOrderQuantity(buyLevel.getSellShareOrderQueue().size());
+                            buy++;
+
+                        } else {
+                            buyLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            buyLevel.getSellShareOrderQueue().put(sellShareOrder);
+
+                            buyLevel.setBuyLotQuantity(buyLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            buyLevel.setBuyShareOrderQuantity(buyLevel.getBuyShareOrderQueue().size());
+
+                            buyLevel.setSellLotQuantity(buyLevel.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            buyLevel.setSellShareOrderQuantity(buyLevel.getSellShareOrderQueue().size());
+                            shareService.updateSharePrice(share, -0.01);
+                            log.info("Fiyat azaldı...");
+                        }
+                    }else {
+                        shareService.updateSharePrice(share, -0.01);
+                        log.info("Fiyat azaldı...");
+                    }
+
+                    log.info("{} hissesi ALIŞ : {} SATIŞ : {} Alış sayısı : {} Lot sayısı : {}", share.getShareCode().getCode(), share.getBuyPrice(), share.getSellPrice(), buy, buyLevel.getBuyLotQuantity());
+                } catch (InterruptedException ex) {
+
+                } catch (NullPointerException npe) {
+
+                }
+            }
+        });
+
+        Thread processedSellLevelShareOrders = new Thread(() -> {
+            Share share = Database.shareMap.get(ShareEnum.ALPHA);
+            Level sellLevel;
+            Level buyLevel;
+            while (true) {
+                try {
+                    Thread.sleep(500);
+                    buyLevel = share.getDepth().getLevelMap().get(share.getBuyPrice());
+                    sellLevel = share.getDepth().getLevelMap().get(share.getSellPrice());
+                    int sell = 0;
+
+                    if (!sellLevel.getBuyShareOrderQueue().isEmpty() && !sellLevel.getSellShareOrderQueue().isEmpty()) {
+                        ShareOrder buyShareOrder = sellLevel.getBuyShareOrderQueue().take();
+                        ShareOrder sellShareOrder = sellLevel.getSellShareOrderQueue().take();
+
+                        if (sellLevel.getSellLotQuantity() >= buyShareOrder.getLot()) {
+                            tradeService.processedShareOrder(share, buyShareOrder, sellShareOrder);
+
+                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
+                                buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                sellLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            }
+                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
+                                sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                sellLevel.getSellShareOrderQueue().put(sellShareOrder);
+                            }
+
+                            sellLevel.setBuyLotQuantity(sellLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            sellLevel.setBuyShareOrderQuantity(sellLevel.getBuyShareOrderQueue().size());
+
+                            sellLevel.setSellLotQuantity(sellLevel.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            sellLevel.setSellShareOrderQuantity(sellLevel.getSellShareOrderQueue().size());
+                            sell++;
+
+                        } else {
+                            sellLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            sellLevel.getSellShareOrderQueue().put(sellShareOrder);
+
+                            sellLevel.setBuyLotQuantity(sellLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            sellLevel.setBuyShareOrderQuantity(sellLevel.getBuyShareOrderQueue().size());
+
+                            sellLevel.setSellLotQuantity(sellLevel.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                            sellLevel.setSellShareOrderQuantity(sellLevel.getSellShareOrderQueue().size());
+                            shareService.updateSharePrice(share, 0.01);
+                            log.info("Fiyat arttı...");
+                        }
+                    }else {
+                        shareService.updateSharePrice(share, 0.01);
+                        log.info("Fiyat arttı...");
+                    }
+
+                    log.info("{} hissesi ALIŞ : {} SATIŞ : {} Satış sayısı : {} Lot sayısı : {}", share.getShareCode().getCode(), share.getBuyPrice(), share.getSellPrice(), sell, sellLevel.getSellLotQuantity());
+                } catch (InterruptedException ex) {
+
+                } catch (NullPointerException npe) {
+
+                }
+            }
+        });
+
         a.start();
         b.start();
         c.start();
         d.start();
         e.start();
-        //decomposeShareOrder.start();
-        matchShareOrderA.start();
-        matchShareOrderB.start();
-        /*matchShareOrderC.start();
-        matchShareOrderD.start();
-        matchShareOrderE.start();*/
+        f.start();
+        g.start();
+        h.start();
+        i.start();
+        j.start();
+        k.start();
+        l.start();
+        processedBuyLevelShareOrders.start();
+        processedSellLevelShareOrders.start();
     }
 
-    private void put(ShareOrder shareOrder){
-        try {
-            Database.shareOrderQueue.put(shareOrder);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private synchronized int idPlus(){
+    private synchronized int idPlus() {
         return ++id;
     }
 
-    private Customer createCustomer(String customerName){
+    private Customer createCustomer(String customerName) {
         Map<ShareEnum, Integer> haveShare = new HashMap<>();
-        haveShare.put(ShareEnum.AAA, 1000);
-        haveShare.put(ShareEnum.BBB, 1000);
-        /*haveShare.put(ShareEnum.CCC, 100);
+        haveShare.put(ShareEnum.ALPHA, 1000);
+        /*haveShare.put(ShareEnum.BETA, 1000);
+        haveShare.put(ShareEnum.GAMMA, 100);
         haveShare.put(ShareEnum.DDD, 100);
         haveShare.put(ShareEnum.EEE, 100);*/
         Portfolio portfolio = new Portfolio(10000.0, haveShare);

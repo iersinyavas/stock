@@ -5,18 +5,34 @@ import com.artsoft.stock.model.Level;
 import com.artsoft.stock.service.ShareService;
 import com.artsoft.stock.util.GeneralEnumeration;
 import com.artsoft.stock.util.MathOperation;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
+@Getter
+@Setter
 public class ShareServiceImpl implements ShareService {
+
+    private static int max;
+    private static int min;
+
     @Override
     public void updateSharePrice(Share share, Double change) {
         synchronized (this){
-            share.setBuyPrice(MathOperation.arrangeDouble(share.getBuyPrice() + change));
-            share.setSellPrice(MathOperation.arrangeDouble(share.getSellPrice() + change));
+            /*Map<Double, Level> levelMap = share.getDepth().getLevelMap();
+            while (levelMap.get(share.getBuyPrice() + change).getBuyShareOrderQueue().isEmpty())*/
+
+            if (MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getBuyPrice() + change)) >= MathOperation.min(share.getStartPrice())
+                && MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getSellPrice() + change)) <= MathOperation.max(share.getStartPrice())) {
+
+                share.setBuyPrice(MathOperation.arrangeDouble(share.getBuyPrice() + change));
+                share.setSellPrice(MathOperation.arrangeDouble(share.getSellPrice() + change));
+            }
         }
     }
 
@@ -28,30 +44,6 @@ public class ShareServiceImpl implements ShareService {
             share.setBuyPrice(MathOperation.arrangeDouble((double) (new Random().nextInt(max - min) + min)/100));
             share.setSellPrice(MathOperation.arrangeDouble(share.getBuyPrice() + 0.01));
         }
-    }
-
-    @Override
-    public void updateShare(Share share) {
-        Level level = share.getDepth().getLevelMap().get(share.getBuyPrice());
-        level.setBuyLotQuantity(
-                level.getShareOrderList().stream()
-                        .filter(shareOrder -> shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY))
-                        .mapToInt(shareOrder -> shareOrder.getLot()).sum());
-
-        level.setSellLotQuantity(
-                level.getShareOrderList().stream()
-                        .filter(shareOrder -> shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL))
-                        .mapToInt(shareOrder -> shareOrder.getLot()).sum());
-
-        level.setBuyShareOrderQuantity((int)
-                level.getShareOrderList().stream()
-                        .filter(shareOrder -> shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY))
-                        .count());
-
-        level.setSellShareOrderQuantity((int)
-                level.getShareOrderList().stream()
-                        .filter(shareOrder -> shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL))
-                        .count());
     }
 
 }

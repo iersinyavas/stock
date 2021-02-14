@@ -6,5 +6,4 @@ public interface ShareService {
 
     void updateSharePrice(Share share, Double change);
     void setShareStartPrice(Share share);
-    void updateShare(Share share);
 }

@@ -101,63 +101,26 @@ public class ShareOrderServiceImpl implements ShareOrderService {
         return true;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public void decomposeShareOrder(ShareOrder shareOrder) {
-        synchronized (this){
-            Share share = Database.shareMap.get(shareOrder.getShareEnum());
-
-            Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
-            level.setShareCode(share.getShareCode());
-
-            if (shareOrder.getShareOrderOperationStatus().equals(ShareOrderStatus.BUY)){
-                level.setBuyLotQuantity(shareOrder.getLot() + level.getBuyLotQuantity());
-                level.setBuyShareOrderQuantity(level.getBuyShareOrderQuantity() + 1);
-            }else {
-                level.setSellLotQuantity(shareOrder.getLot() + level.getSellLotQuantity());
-                level.setSellShareOrderQuantity(level.getSellShareOrderQuantity() + 1);
-            }
-            level.getShareOrderList().add(shareOrder);
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public void immediatelyShareOrder(ShareOrder shareOrder) {
-        synchronized (this){
-            Share share = Database.shareMap.get(shareOrder.getShareEnum());
-
-            if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() > Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice()){
-                Level level = share.getDepth().getLevelMap().get(share.getSellPrice());
-                share.getDepth().getLevelMap().get(shareOrder.getPrice());
-                level.setShareCode(share.getShareCode());
-
-                level.setBuyLotQuantity(shareOrder.getLot() + level.getBuyLotQuantity());
-                level.setBuyShareOrderQuantity(level.getBuyShareOrderQuantity() + 1);
-
-                level.getShareOrderList().add(shareOrder);
-            }
-
-            if(shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() < Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice()){
-                Level level = share.getDepth().getLevelMap().get(share.getBuyPrice());
-                share.getDepth().getLevelMap().get(shareOrder.getPrice());
-                level.setShareCode(share.getShareCode());
-
-                level.setSellLotQuantity(shareOrder.getLot() + level.getSellLotQuantity());
-                level.setSellShareOrderQuantity(level.getSellShareOrderQuantity() + 1);
-
-                level.getShareOrderList().add(shareOrder);
-            }
-        }
-    }
-
     private void shareOrderLotUpdate(ShareOrder bigLotShareOrder, ShareOrder smallLotShareOrder) {
         bigLotShareOrder.setLot(bigLotShareOrder.getLot() - smallLotShareOrder.getLot());
         smallLotShareOrder.setLot(0);
     }
 
     @Override
+    public boolean isProcessedImmediately(ShareOrder shareOrder){
+        synchronized (this){
+            if ((shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY) && shareOrder.getPrice() >= Database.shareMap.get(shareOrder.getShareEnum()).getBuyPrice())
+                    || (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.SELL) && shareOrder.getPrice() <= Database.shareMap.get(shareOrder.getShareEnum()).getSellPrice())){
+                return true;
+            }else {
+                return false;
+            }
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public void processedShareOrders(ShareOrder buyShareOrder, ShareOrder sellShareOrder) {
+    public void processedShareOrders(Share share, ShareOrder buyShareOrder, ShareOrder sellShareOrder) {
         buyShareOrder.setShareOrderOperationStatus(GeneralEnumeration.ShareOrderOperationStatus.PROCESSING);
         sellShareOrder.setShareOrderOperationStatus(GeneralEnumeration.ShareOrderOperationStatus.PROCESSING);
 
@@ -170,7 +133,7 @@ public class ShareOrderServiceImpl implements ShareOrderService {
 
             shareOrderLotUpdate(buyShareOrder, sellShareOrder);
 
-            buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+            buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.REMAINING);
             sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.REMOVE);
 
         } else if (buyShareOrder.getLot() < sellShareOrder.getLot()) {
@@ -183,7 +146,7 @@ public class ShareOrderServiceImpl implements ShareOrderService {
             shareOrderLotUpdate(sellShareOrder, buyShareOrder);
 
             buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.REMOVE);
-            sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+            sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.REMAINING);
 
         } else {
             Double sellAmount = MathOperation.arrangeDouble((double) sellShareOrder.getLot() * sellShareOrder.getPrice());
@@ -200,28 +163,4 @@ public class ShareOrderServiceImpl implements ShareOrderService {
         }
     }
 
-    @Override
-    public void deletedShareOrders(Share share, List<ShareOrder> buyLevelBuyShareOrderList, List<ShareOrder> buyLevelSellShareOrderList, List<ShareOrder> sellLevelBuyShareOrderList, List<ShareOrder> sellLevelSellShareOrderList) {
-        synchronized (this){
-            Predicate<ShareOrder> deletedShareOrder = shareOrder -> shareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE);
-
-            List<ShareOrder> buyLevelBuyShareOrder = buyLevelBuyShareOrderList.stream().filter(shareOrder -> shareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)).collect(Collectors.toList());
-            List<ShareOrder> buyLevelSellShareOrder = buyLevelSellShareOrderList.stream().filter(shareOrder -> shareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)).collect(Collectors.toList());
-            List<ShareOrder> sellLevelBuyShareOrder = sellLevelBuyShareOrderList.stream().filter(shareOrder -> shareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)).collect(Collectors.toList());
-            List<ShareOrder> sellLevelSellShareOrder = sellLevelSellShareOrderList.stream().filter(shareOrder -> shareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)).collect(Collectors.toList());
-
-            if(!buyLevelBuyShareOrder.isEmpty()){
-                share.getDepth().getLevelMap().get(buyLevelBuyShareOrder.get(0).getPrice()).getShareOrderList().removeIf(deletedShareOrder);
-            }
-            if (!buyLevelSellShareOrder.isEmpty()){
-                share.getDepth().getLevelMap().get(buyLevelSellShareOrder.get(0).getPrice()).getShareOrderList().removeIf(deletedShareOrder);
-            }
-            if (!sellLevelBuyShareOrder.isEmpty()){
-                share.getDepth().getLevelMap().get(sellLevelBuyShareOrder.get(0).getPrice()).getShareOrderList().removeIf(deletedShareOrder);
-            }
-            if (!sellLevelSellShareOrder.isEmpty()){
-                share.getDepth().getLevelMap().get(sellLevelSellShareOrder.get(0).getPrice()).getShareOrderList().removeIf(deletedShareOrder);
-            }
-        }
-    }
 }
