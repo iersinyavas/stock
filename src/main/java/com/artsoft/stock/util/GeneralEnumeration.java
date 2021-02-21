@@ -37,8 +37,8 @@ public class GeneralEnumeration {
         SENT, RECEIVED, PROCESSING, REMOVE, REMAINING;
     }
 
-    public enum BuyOrSell{
-        BUY, SELL;
+    public enum ShareSessionType{
+        OPENING, NORMAL, CLOSING
     }
 
 }

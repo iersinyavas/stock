@@ -11,6 +11,7 @@ import com.artsoft.stock.service.ShareService;
 import com.artsoft.stock.service.TradeService;
 import com.artsoft.stock.service.impl.ShareOrderServiceImpl;
 import com.artsoft.stock.util.GeneralEnumeration;
+import com.artsoft.stock.util.GeneralEnumeration.ShareSessionType;
 import com.artsoft.stock.util.GeneralEnumeration.ShareOrderOperationStatus;
 import com.artsoft.stock.util.GeneralEnumeration.ShareEnum;
 import com.artsoft.stock.util.MathOperation;
@@ -45,14 +46,14 @@ public class StockApplication implements CommandLineRunner {
 
     @PostConstruct
     public void init() {
-        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.0));
+        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.0, 1.0, 1.01, ShareSessionType.OPENING));
         /*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
         Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*/
 
         Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
         /*Database.shareMap.get(ShareEnum.BETA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BETA));
         Database.shareMap.get(ShareEnum.GAMMA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.GAMMA));*/
-        shareService.setShareStartPrice(Database.shareMap.get(ShareEnum.ALPHA));
+        //shareService.setRandomShareStartPrice(Database.shareMap.get(ShareEnum.ALPHA));
 
     }
 
@@ -79,6 +80,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -121,6 +126,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -162,6 +171,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -202,6 +215,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -242,6 +259,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -283,6 +304,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -324,6 +349,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -365,6 +394,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -406,6 +439,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -447,6 +484,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -488,6 +529,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -529,6 +574,10 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                        Database.shareOrderQueue.put(shareOrder);
+                        continue;
+                    }
 
                     if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
                         Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
@@ -600,11 +649,13 @@ public class StockApplication implements CommandLineRunner {
                             log.info("Fiyat azaldı...");
                         }
                     }else {
-                        shareService.updateSharePrice(share, -0.01);
-                        log.info("Fiyat azaldı...");
+                        if (buyLevel.getBuyShareOrderQueue().isEmpty() && !sellLevel.getSellShareOrderQueue().isEmpty()) {
+                            shareService.updateSharePrice(share, -0.01);
+                            log.info("Fiyat azaldı...");
+                        }
                     }
 
-                    log.info("{} hissesi ALIŞ : {} SATIŞ : {} Alış sayısı : {} Lot sayısı : {}", share.getShareCode().getCode(), share.getBuyPrice(), share.getSellPrice(), buy, buyLevel.getBuyLotQuantity());
+                    log.info("ALIŞ tarafı ---> {} hissesi ALIŞ : {} SATIŞ : {} Alış sayısı : {} Lot sayısı : {}", share.getShareCode().getCode(), share.getBuyPrice(), share.getSellPrice(), buy, buyLevel.getBuyLotQuantity());
                 } catch (InterruptedException ex) {
 
                 } catch (NullPointerException npe) {
@@ -660,16 +711,43 @@ public class StockApplication implements CommandLineRunner {
                             log.info("Fiyat arttı...");
                         }
                     }else {
-                        shareService.updateSharePrice(share, 0.01);
-                        log.info("Fiyat arttı...");
+                        if (!buyLevel.getBuyShareOrderQueue().isEmpty() && sellLevel.getSellShareOrderQueue().isEmpty()) {
+                            shareService.updateSharePrice(share, 0.01);
+                            log.info("Fiyat arttı...");
+                        }
                     }
 
-                    log.info("{} hissesi ALIŞ : {} SATIŞ : {} Satış sayısı : {} Lot sayısı : {}", share.getShareCode().getCode(), share.getBuyPrice(), share.getSellPrice(), sell, sellLevel.getSellLotQuantity());
+                    log.info("SATIŞ tarafı ---> {} hissesi ALIŞ : {} SATIŞ : {} Satış sayısı : {} Lot sayısı : {}", share.getShareCode().getCode(), share.getBuyPrice(), share.getSellPrice(), sell, sellLevel.getSellLotQuantity());
                 } catch (InterruptedException ex) {
 
                 } catch (NullPointerException npe) {
 
                 }
+            }
+        });
+
+        Thread openingPrice = new Thread(() -> {
+            Share share = Database.shareMap.get(ShareEnum.ALPHA);
+            shareService.setOpeningPrice(share, share.getStartPrice());
+            Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
+            ShareOrder shareOrder = null;
+            try {
+                while (!Database.shareOrderQueue.isEmpty()) {
+                    shareOrder = Database.shareOrderQueue.take();
+                    if (shareOrder.getShareOrderStatus().equals(GeneralEnumeration.ShareOrderStatus.BUY)) {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getBuyShareOrderQueue().put(shareOrder);
+                        level.setBuyLotQuantity(level.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setBuyShareOrderQuantity(level.getBuyShareOrderQueue().size());
+                    } else {
+                        Level level = share.getDepth().getLevelMap().get(shareOrder.getPrice());
+                        level.getSellShareOrderQueue().put(shareOrder);
+                        level.setSellLotQuantity(level.getSellShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
+                        level.setSellShareOrderQuantity(level.getSellShareOrderQueue().size());
+                    }
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
             }
         });
 
@@ -685,6 +763,11 @@ public class StockApplication implements CommandLineRunner {
         j.start();
         k.start();
         l.start();
+        Thread.sleep(5000);
+        openingPrice.start();
+        openingPrice.join();
+        //Thread.sleep(20000);
+        //shareService.shareSessionTypeChange(Database.shareMap.get(ShareEnum.ALPHA), ShareSessionType.NORMAL);
         processedBuyLevelShareOrders.start();
         processedSellLevelShareOrders.start();
     }
