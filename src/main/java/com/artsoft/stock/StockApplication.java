@@ -614,19 +614,21 @@ public class StockApplication implements CommandLineRunner {
                     int buy = 0;
 
                     if (!buyLevel.getBuyShareOrderQueue().isEmpty() && !buyLevel.getSellShareOrderQueue().isEmpty()) {
-                        ShareOrder buyShareOrder = buyLevel.getBuyShareOrderQueue().take();
-                        ShareOrder sellShareOrder = buyLevel.getSellShareOrderQueue().take();
+                        ShareOrder buyShareOrder = buyLevel.getBuyShareOrderQueue().peek();
+                        ShareOrder sellShareOrder = buyLevel.getSellShareOrderQueue().peek();
 
                         if (buyLevel.getBuyLotQuantity() >= sellShareOrder.getLot()) {
                             tradeService.processedShareOrder(share, buyShareOrder, sellShareOrder);
 
-                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
-                                buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
-                                buyLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.RECEIVED)) {
+                                //buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                buyLevel.getBuyShareOrderQueue().take();
+                                log.info("{} idli share order silinmiş olmalı", buyShareOrder.getId());
                             }
-                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
-                                sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
-                                buyLevel.getSellShareOrderQueue().put(sellShareOrder);
+                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.RECEIVED)) {
+                                //sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                buyLevel.getSellShareOrderQueue().take();
+                                log.info("{} idli share order silinmiş olmalı", sellShareOrder.getId());
                             }
 
                             buyLevel.setBuyLotQuantity(buyLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
@@ -637,8 +639,8 @@ public class StockApplication implements CommandLineRunner {
                             buy++;
 
                         } else {
-                            buyLevel.getBuyShareOrderQueue().put(buyShareOrder);
-                            buyLevel.getSellShareOrderQueue().put(sellShareOrder);
+                            //buyLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            //buyLevel.getSellShareOrderQueue().put(sellShareOrder);
 
                             buyLevel.setBuyLotQuantity(buyLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
                             buyLevel.setBuyShareOrderQuantity(buyLevel.getBuyShareOrderQueue().size());
@@ -676,19 +678,21 @@ public class StockApplication implements CommandLineRunner {
                     int sell = 0;
 
                     if (!sellLevel.getBuyShareOrderQueue().isEmpty() && !sellLevel.getSellShareOrderQueue().isEmpty()) {
-                        ShareOrder buyShareOrder = sellLevel.getBuyShareOrderQueue().take();
-                        ShareOrder sellShareOrder = sellLevel.getSellShareOrderQueue().take();
+                        ShareOrder buyShareOrder = sellLevel.getBuyShareOrderQueue().peek();
+                        ShareOrder sellShareOrder = sellLevel.getSellShareOrderQueue().peek();
 
                         if (sellLevel.getSellLotQuantity() >= buyShareOrder.getLot()) {
                             tradeService.processedShareOrder(share, buyShareOrder, sellShareOrder);
 
-                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
-                                buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
-                                sellLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)) {
+                                //buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                sellLevel.getBuyShareOrderQueue().take();
+                                log.info("{} idli share order silinmiş olmalı", buyShareOrder.getId());
                             }
-                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMAINING)) {
-                                sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
-                                sellLevel.getSellShareOrderQueue().put(sellShareOrder);
+                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)) {
+                                //sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
+                                sellLevel.getSellShareOrderQueue().take();
+                                log.info("{} idli share order silinmiş olmalı", sellShareOrder.getId());
                             }
 
                             sellLevel.setBuyLotQuantity(sellLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
@@ -699,8 +703,8 @@ public class StockApplication implements CommandLineRunner {
                             sell++;
 
                         } else {
-                            sellLevel.getBuyShareOrderQueue().put(buyShareOrder);
-                            sellLevel.getSellShareOrderQueue().put(sellShareOrder);
+                            //sellLevel.getBuyShareOrderQueue().put(buyShareOrder);
+                            //sellLevel.getSellShareOrderQueue().put(sellShareOrder);
 
                             sellLevel.setBuyLotQuantity(sellLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
                             sellLevel.setBuyShareOrderQuantity(sellLevel.getBuyShareOrderQueue().size());

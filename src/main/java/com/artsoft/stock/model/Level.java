@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,9 +18,9 @@ public class Level {
     private ShareEnum shareCode;
     private ShareOrderStatus levelShareOrderStatus;
     private Double price;
-    private BlockingQueue<ShareOrder> buyShareOrderQueue = new ArrayBlockingQueue(250);
-    private BlockingQueue<ShareOrder> sellShareOrderQueue = new ArrayBlockingQueue(250);
-    private BlockingQueue<ShareOrder> remainingShareOrderQueue = new ArrayBlockingQueue(250);
+    private BlockingQueue<ShareOrder> buyShareOrderQueue = new LinkedBlockingQueue();
+    private BlockingQueue<ShareOrder> sellShareOrderQueue = new LinkedBlockingQueue();
+    private BlockingQueue<ShareOrder> remainingShareOrderQueue = new LinkedBlockingQueue();
     private Integer buyLotQuantity = 0;
     private Integer sellLotQuantity = 0;
     private Integer buyShareOrderQuantity = 0;
