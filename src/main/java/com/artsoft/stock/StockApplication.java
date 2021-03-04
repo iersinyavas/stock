@@ -46,7 +46,7 @@ public class StockApplication implements CommandLineRunner {
 
     @PostConstruct
     public void init() {
-        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.0, 1.0, 1.01, ShareSessionType.OPENING));
+        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.14, 1.14, 1.15, ShareSessionType.OPENING));
         /*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
         Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*/
 
@@ -620,15 +620,15 @@ public class StockApplication implements CommandLineRunner {
                         if (buyLevel.getBuyLotQuantity() >= sellShareOrder.getLot()) {
                             tradeService.processedShareOrder(share, buyShareOrder, sellShareOrder);
 
-                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.RECEIVED)) {
+                            if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)) {
                                 //buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
                                 buyLevel.getBuyShareOrderQueue().take();
-                                log.info("{} idli share order silinmiş olmalı", buyShareOrder.getId());
+                                //log.info("{} idli share order silinmiş olmalı", buyShareOrder.getId());
                             }
-                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.RECEIVED)) {
+                            if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)) {
                                 //sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
                                 buyLevel.getSellShareOrderQueue().take();
-                                log.info("{} idli share order silinmiş olmalı", sellShareOrder.getId());
+                                //log.info("{} idli share order silinmiş olmalı", sellShareOrder.getId());
                             }
 
                             buyLevel.setBuyLotQuantity(buyLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
@@ -687,12 +687,12 @@ public class StockApplication implements CommandLineRunner {
                             if (buyShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)) {
                                 //buyShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
                                 sellLevel.getBuyShareOrderQueue().take();
-                                log.info("{} idli share order silinmiş olmalı", buyShareOrder.getId());
+                                //log.info("{} idli share order silinmiş olmalı", buyShareOrder.getId());
                             }
                             if (sellShareOrder.getShareOrderOperationStatus().equals(ShareOrderOperationStatus.REMOVE)) {
                                 //sellShareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.RECEIVED);
                                 sellLevel.getSellShareOrderQueue().take();
-                                log.info("{} idli share order silinmiş olmalı", sellShareOrder.getId());
+                                //log.info("{} idli share order silinmiş olmalı", sellShareOrder.getId());
                             }
 
                             sellLevel.setBuyLotQuantity(sellLevel.getBuyShareOrderQueue().stream().mapToInt(ShareOrder::getLot).sum());
@@ -774,6 +774,19 @@ public class StockApplication implements CommandLineRunner {
         //shareService.shareSessionTypeChange(Database.shareMap.get(ShareEnum.ALPHA), ShareSessionType.NORMAL);
         processedBuyLevelShareOrders.start();
         processedSellLevelShareOrders.start();
+    }
+
+    private void onCreate() {
+        Share share = Database.shareMap.get(ShareEnum.ALPHA);
+        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, share.getBuyPrice(), share.getBuyPrice(), share.getSellPrice(), ShareSessionType.OPENING));
+        /*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
+        Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*/
+
+        Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
+        /*Database.shareMap.get(ShareEnum.BETA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BETA));
+        Database.shareMap.get(ShareEnum.GAMMA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.GAMMA));*/
+        //shareService.setRandomShareStartPrice(Database.shareMap.get(ShareEnum.ALPHA));
+
     }
 
     private synchronized int idPlus() {

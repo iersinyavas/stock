@@ -5,6 +5,7 @@ import com.artsoft.stock.dto.ShareOrder;
 import com.artsoft.stock.model.Level;
 import com.artsoft.stock.repository.Database;
 import com.artsoft.stock.service.ShareService;
+import com.artsoft.stock.util.GeneralConstant;
 import com.artsoft.stock.util.GeneralEnumeration;
 import com.artsoft.stock.util.GeneralEnumeration.ShareSessionType;
 import com.artsoft.stock.util.MathOperation;
@@ -71,7 +72,7 @@ public class ShareServiceImpl implements ShareService {
     @Override
     public void setOpeningPrice(Share share, Double startPrice) {
 
-        while (share.getShareSessionType().equals(GeneralEnumeration.ShareSessionType.OPENING)) {
+        while (share.getShareSessionType().equals(GeneralEnumeration.ShareSessionType.OPENING) && Database.shareOrderQueue.size() <= GeneralConstant.QUEUE_SIZE) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -106,6 +107,7 @@ public class ShareServiceImpl implements ShareService {
             }
             share.setShareSessionType(ShareSessionType.NORMAL);
         }
+        share.setShareSessionType(ShareSessionType.NORMAL);
         share.setBuyPrice(MathOperation.arrangeDouble(startPrice));
         share.setSellPrice(MathOperation.arrangeDouble(share.getBuyPrice() + 0.01));
         log.info("Alış fiyatı : {} Satış fiyatı : {}", share.getBuyPrice(), share.getSellPrice());
