@@ -6,6 +6,7 @@ import com.artsoft.stock.dto.Share;
 import com.artsoft.stock.dto.ShareOrder;
 import com.artsoft.stock.model.Level;
 import com.artsoft.stock.repository.Database;
+import com.artsoft.stock.service.CustomerService;
 import com.artsoft.stock.service.ShareOrderService;
 import com.artsoft.stock.service.ShareService;
 import com.artsoft.stock.service.TradeService;
@@ -39,6 +40,8 @@ public class StockApplication implements CommandLineRunner {
     private TradeService tradeService;
     @Autowired
     private ShareService shareService;
+    @Autowired
+    private CustomerService customerService;
 
     Random random = new Random();
 
@@ -63,8 +66,8 @@ public class StockApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Thread a = new Thread(() -> {
-            Customer customer = createCustomer("A");
+        Thread customerA = new Thread(() -> {
+            Customer customer = customerService.createCustomer("A");
             Database.customerMap.put("A", customer);
             while (true) {
                 try {
@@ -108,9 +111,10 @@ public class StockApplication implements CommandLineRunner {
 
             }
         });
+        customerA.setName("A");
 
-        Thread b = new Thread(() -> {
-            Customer customer = createCustomer("B");
+        Thread customerB = new Thread(() -> {
+            Customer customer = customerService.createCustomer("B");
             Database.customerMap.put("B", customer);
             while (true) {
                 try {
@@ -153,8 +157,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
-        Thread c = new Thread(() -> {
-            Customer customer = createCustomer("C");
+        customerB.setName("B");
+
+        Thread customerC = new Thread(() -> {
+            Customer customer = customerService.createCustomer("C");
             Database.customerMap.put("C", customer);
 
             while (true) {
@@ -198,8 +204,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
-        Thread d = new Thread(() -> {
-            Customer customer = createCustomer("D");
+        customerC.setName("C");
+
+        Thread customerD = new Thread(() -> {
+            Customer customer = customerService.createCustomer("D");
             Database.customerMap.put("D", customer);
             while (true) {
                 try {
@@ -242,8 +250,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
-        Thread e = new Thread(() -> {
-            Customer customer = createCustomer("E");
+        customerD.setName("D");
+
+        Thread customerE = new Thread(() -> {
+            Customer customer = customerService.createCustomer("E");
             Database.customerMap.put("E", customer);
             while (true) {
                 try {
@@ -286,9 +296,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerE.setName("E");
 
-        Thread f = new Thread(() -> {
-            Customer customer = createCustomer("F");
+        Thread customerF = new Thread(() -> {
+            Customer customer = customerService.createCustomer("F");
             Database.customerMap.put("F", customer);
             while (true) {
                 try {
@@ -331,9 +342,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerF.setName("F");
 
-        Thread g = new Thread(() -> {
-            Customer customer = createCustomer("G");
+        Thread customerG = new Thread(() -> {
+            Customer customer = customerService.createCustomer("G");
             Database.customerMap.put("G", customer);
             while (true) {
                 try {
@@ -376,9 +388,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerG.setName("G");
 
-        Thread h = new Thread(() -> {
-            Customer customer = createCustomer("H");
+        Thread customerH = new Thread(() -> {
+            Customer customer = customerService.createCustomer("H");
             Database.customerMap.put("H", customer);
             while (true) {
                 try {
@@ -421,9 +434,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerH.setName("H");
 
-        Thread i = new Thread(() -> {
-            Customer customer = createCustomer("I");
+        Thread customerI = new Thread(() -> {
+            Customer customer = customerService.createCustomer("I");
             Database.customerMap.put("I", customer);
             while (true) {
                 try {
@@ -466,9 +480,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerI.setName("I");
 
-        Thread j = new Thread(() -> {
-            Customer customer = createCustomer("J");
+        Thread customerJ = new Thread(() -> {
+            Customer customer = customerService.createCustomer("J");
             Database.customerMap.put("J", customer);
             while (true) {
                 try {
@@ -511,9 +526,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerJ.setName("J");
 
-        Thread k = new Thread(() -> {
-            Customer customer = createCustomer("K");
+        Thread customerK = new Thread(() -> {
+            Customer customer = customerService.createCustomer("K");
             Database.customerMap.put("K", customer);
             while (true) {
                 try {
@@ -556,9 +572,10 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerK.setName("K");
 
-        Thread l = new Thread(() -> {
-            Customer customer = createCustomer("L");
+        Thread customerL = new Thread(() -> {
+            Customer customer = customerService.createCustomer("L");
             Database.customerMap.put("L", customer);
             while (true) {
                 try {
@@ -601,6 +618,7 @@ public class StockApplication implements CommandLineRunner {
                 }
             }
         });
+        customerL.setName("L");
 
         Thread processedBuyLevelShareOrders = new Thread(() -> {
             Share share = Database.shareMap.get(ShareEnum.ALPHA);
@@ -772,18 +790,18 @@ public class StockApplication implements CommandLineRunner {
         init.start();
         init.join();
 
-        a.start();
-        b.start();
-        c.start();
-        d.start();
-        e.start();
-        f.start();
-        g.start();
-        h.start();
-        i.start();
-        j.start();
-        k.start();
-        l.start();
+        customerA.start();
+        customerB.start();
+        customerC.start();
+        customerD.start();
+        customerE.start();
+        customerF.start();
+        customerG.start();
+        customerH.start();
+        customerI.start();
+        customerJ.start();
+        customerK.start();
+        customerL.start();
         Thread.sleep(5000);
         openingPrice.start();
         openingPrice.join();
