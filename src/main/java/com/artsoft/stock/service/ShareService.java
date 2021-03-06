@@ -9,5 +9,5 @@ public interface ShareService {
     //void setRandomShareStartPrice(Share share);
     void setOpeningPrice(Share share, Double startPrice);
     void shareSessionTypeChange(Share share, GeneralEnumeration.ShareSessionType shareSessionType);
-    void setShareBuyOrSellPrice(Share share);
+    void setShareBuyAndSellPrice(Share share, Double change);
 }

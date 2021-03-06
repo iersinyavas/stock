@@ -43,6 +43,12 @@ public class ShareOrderServiceImpl implements ShareOrderService {
         shareOrder.setShareOrderOperationStatus(ShareOrderOperationStatus.SENT);
         shareOrder.setPrice(shareEnum.getPrice());
 
+        if (shareOrder.getShareOrderStatus().equals(ShareOrderStatus.BUY) && shareOrder.getPrice() < Database.shareMap.get(ShareEnum.ALPHA).getMin()) {
+            shareOrder.setPrice(Database.shareMap.get(ShareEnum.ALPHA).getMin());
+        }else{
+
+        }
+
         Integer lot = 0;
         try {
             shareOrder.setShareEnum(shareEnum);

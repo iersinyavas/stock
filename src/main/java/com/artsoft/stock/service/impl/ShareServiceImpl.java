@@ -6,7 +6,9 @@ import com.artsoft.stock.model.Level;
 import com.artsoft.stock.repository.Database;
 import com.artsoft.stock.service.ShareService;
 import com.artsoft.stock.util.GeneralConstant;
-import com.artsoft.stock.util.GeneralEnumeration;
+import com.artsoft.stock.util.GeneralEnumeration.ShareOrderStatus;
+import com.artsoft.stock.util.GeneralEnumeration.ShareSessionType;
+import com.artsoft.stock.util.GeneralEnumeration.DirectionFlag;
 import com.artsoft.stock.util.GeneralEnumeration.ShareSessionType;
 import com.artsoft.stock.util.MathOperation;
 import lombok.Getter;
@@ -31,12 +33,12 @@ public class ShareServiceImpl implements ShareService {
 
     @Override
     public void updateSharePrice(Share share, Double change) {
-        synchronized (this){
+        synchronized (this) {
             /*Map<Double, Level> levelMap = share.getDepth().getLevelMap();
             while (levelMap.get(share.getBuyPrice() + change).getBuyShareOrderQueue().isEmpty())*/
 
             if (MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getBuyPrice() + change)) >= MathOperation.min(share.getStartPrice())
-                && MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getSellPrice() + change)) <= MathOperation.max(share.getStartPrice())) {
+                    && MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getSellPrice() + change)) <= MathOperation.max(share.getStartPrice())) {
 
                 share.setBuyPrice(MathOperation.arrangeDouble(share.getBuyPrice() + change));
                 share.setSellPrice(MathOperation.arrangeDouble(share.getSellPrice() + change));
@@ -45,7 +47,7 @@ public class ShareServiceImpl implements ShareService {
     }
 
     @Override
-    public void shareSessionTypeChange(Share share, GeneralEnumeration.ShareSessionType shareSessionType){
+    public void shareSessionTypeChange(Share share, ShareSessionType shareSessionType) {
         share.setShareSessionType(shareSessionType);
     }
 
@@ -60,56 +62,77 @@ public class ShareServiceImpl implements ShareService {
     }*/
 
     @Override
-    public void setShareBuyOrSellPrice(Share share){
-        synchronized (this){
-            int max = (int)(MathOperation.arrangeDouble(MathOperation.max(share.getStartPrice())) * 100) + 1;
-            int min = (int)(MathOperation.arrangeDouble(MathOperation.min(share.getStartPrice())) * 100);
-            share.setBuyPrice(MathOperation.arrangeDouble((double) (new Random().nextInt(max - min) + min)/100));
-            share.setSellPrice(MathOperation.arrangeDouble(share.getBuyPrice() + 0.01));
+    public void setShareBuyAndSellPrice(Share share, Double change) {
+        if (MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getBuyPrice() + change)) >= MathOperation.min(share.getStartPrice())
+                && MathOperation.arrangeDouble(MathOperation.arrangeDouble(share.getSellPrice() + change)) <= MathOperation.max(share.getStartPrice())) {
+
+            share.setBuyPrice(MathOperation.arrangeDouble(share.getBuyPrice() + change));
+            share.setSellPrice(MathOperation.arrangeDouble(share.getSellPrice() + change));
+        }
+    }
+
+    private Double startSharePrice(Share share, Double startPrice, DirectionFlag directionFlag) {
+        synchronized (this) {
+            Double number = MathOperation.arrangeDouble(startPrice);
+            if (directionFlag.equals(DirectionFlag.DOWN)) {
+                if (number <= share.getMin()) {
+                    share.setBuyPrice(MathOperation.arrangeDouble(startPrice));
+                    share.setSellPrice(MathOperation.arrangeDouble(share.getBuyPrice() + 0.01));
+                } else {
+                    share.setBuyPrice(MathOperation.arrangeDouble(startPrice - 0.01));
+                    share.setSellPrice(MathOperation.arrangeDouble(share.getBuyPrice() + 0.01));
+                }
+                return share.getBuyPrice();
+            } else {
+                if (number >= share.getMax()) {
+                    share.setSellPrice(MathOperation.arrangeDouble(startPrice));
+                    share.setBuyPrice(MathOperation.arrangeDouble(share.getSellPrice() - 0.01));
+                } else {
+                    share.setSellPrice(MathOperation.arrangeDouble(startPrice + 0.01));
+                    share.setBuyPrice(MathOperation.arrangeDouble(share.getSellPrice() - 0.01));
+                }
+                return share.getSellPrice();
+            }
         }
     }
 
     @Override
-    public void setOpeningPrice(Share share, Double startPrice) {
+    public void setOpeningPrice(Share share, Double afterStartPrice) {
 
-        while (share.getShareSessionType().equals(GeneralEnumeration.ShareSessionType.OPENING) && Database.shareOrderQueue.size() <= GeneralConstant.QUEUE_SIZE) {
+        while (share.getShareSessionType().equals(ShareSessionType.OPENING) && Database.shareOrderQueue.size() <= GeneralConstant.QUEUE_SIZE) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            Double singlePrice = startPrice;
-            Map<GeneralEnumeration.ShareOrderStatus, List<ShareOrder>> collect = Database.shareOrderQueue.stream().collect(Collectors.groupingBy(ShareOrder::getShareOrderStatus));
+            Double singlePrice = afterStartPrice;
+            Map<ShareOrderStatus, List<ShareOrder>> collect = Database.shareOrderQueue.stream().collect(Collectors.groupingBy(ShareOrder::getShareOrderStatus));
 
-            int receivableLot = collect.get(GeneralEnumeration.ShareOrderStatus.BUY).stream()
+            int receivableLot = collect.get(ShareOrderStatus.BUY).stream()
                     .filter(shareOrder -> shareOrder.getPrice() >= singlePrice)
                     .mapToInt(ShareOrder::getLot)
                     .sum();
 
-            log.info("Alınabilir lot sayısı : {}, Fiyat : {}", receivableLot, singlePrice);
-
-            int salableLot = collect.get(GeneralEnumeration.ShareOrderStatus.SELL).stream()
+            int salableLot = collect.get(ShareOrderStatus.SELL).stream()
                     .filter(shareOrder -> shareOrder.getPrice() <= singlePrice)
                     .mapToInt(ShareOrder::getLot)
                     .sum();
 
-            log.info("Satılabilir lot sayısı : {}, Fiyat : {}", salableLot, singlePrice);
-
             if (receivableLot > salableLot) {
-                share.setStartPrice(singlePrice);
-                startPrice = MathOperation.arrangeDouble(startPrice + 0.01);
+                //share.setStartPrice(singlePrice);
+                afterStartPrice = startSharePrice(share, afterStartPrice, DirectionFlag.UP);
+                log.info("Alınabilir lot sayısı : {} ----- Satılabilir lot sayısı : {}, Fiyat : {}", receivableLot, salableLot, afterStartPrice);
                 continue;
-            }else if (receivableLot < salableLot){
-                share.setStartPrice(singlePrice);
-                startPrice = MathOperation.arrangeDouble(startPrice - 0.01);
+            } else if (receivableLot < salableLot) {
+                //share.setStartPrice(singlePrice);
+                afterStartPrice = startSharePrice(share, afterStartPrice, DirectionFlag.DOWN);
+                log.info("Alınabilir lot sayısı : {} ----- Satılabilir lot sayısı : {}, Fiyat : {}", receivableLot, salableLot, afterStartPrice);
                 continue;
             }
-            share.setShareSessionType(ShareSessionType.NORMAL);
+            log.info("Alınabilir lot sayısı : {} ----- Satılabilir lot sayısı : {}, Fiyat : {}", receivableLot, salableLot, afterStartPrice);
         }
         share.setShareSessionType(ShareSessionType.NORMAL);
-        share.setBuyPrice(MathOperation.arrangeDouble(startPrice));
-        share.setSellPrice(MathOperation.arrangeDouble(share.getBuyPrice() + 0.01));
         log.info("Alış fiyatı : {} Satış fiyatı : {}", share.getBuyPrice(), share.getSellPrice());
 
     }

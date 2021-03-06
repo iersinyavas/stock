@@ -41,4 +41,8 @@ public class GeneralEnumeration {
         OPENING, NORMAL, CLOSING
     }
 
+    public enum DirectionFlag{
+        UP, DOWN
+    }
+
 }

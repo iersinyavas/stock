@@ -23,6 +23,9 @@ public class Depth {
         int max = (int)(MathOperation.arrangeDouble(MathOperation.max(share.getStartPrice())) * 100);
         int min = (int)(MathOperation.arrangeDouble(MathOperation.min(share.getStartPrice())) * 100);
 
+        share.setMax(MathOperation.arrangeDouble((double)max/100));
+        share.setMin(MathOperation.arrangeDouble((double)min/100));
+
         for (int i=min; i<=max; i++){
             Double value = MathOperation.arrangeDouble((double)i/100);
             levelMap.put(value, new Level(value));

@@ -44,18 +44,18 @@ public class StockApplication implements CommandLineRunner {
 
     private static int id = 0;
 
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
-        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.14, 1.14, 1.15, ShareSessionType.OPENING));
-        /*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
-        Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*/
+        Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.0, 1.0, 1.01, ShareSessionType.OPENING));
+        *//*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
+        Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*//*
 
         Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
-        /*Database.shareMap.get(ShareEnum.BETA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BETA));
-        Database.shareMap.get(ShareEnum.GAMMA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.GAMMA));*/
+        *//*Database.shareMap.get(ShareEnum.BETA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BETA));
+        Database.shareMap.get(ShareEnum.GAMMA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.GAMMA));*//*
         //shareService.setRandomShareStartPrice(Database.shareMap.get(ShareEnum.ALPHA));
 
-    }
+    }*/
 
     public static void main(String[] args) {
         SpringApplication.run(StockApplication.class, args);
@@ -80,7 +80,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -126,7 +126,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -171,7 +171,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -215,7 +215,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -259,7 +259,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -304,7 +304,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -349,7 +349,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -394,7 +394,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -439,7 +439,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -484,7 +484,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -529,7 +529,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -574,7 +574,7 @@ public class StockApplication implements CommandLineRunner {
                             shareOrder.setPrice(share.getBuyPrice());
                         }
                     }*/
-                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)){
+                    if (share.getShareSessionType().equals(ShareSessionType.OPENING)) {
                         Database.shareOrderQueue.put(shareOrder);
                         continue;
                     }
@@ -650,7 +650,7 @@ public class StockApplication implements CommandLineRunner {
                             shareService.updateSharePrice(share, -0.01);
                             log.info("Fiyat azaldı...");
                         }
-                    }else {
+                    } else {
                         if (buyLevel.getBuyShareOrderQueue().isEmpty() && !sellLevel.getSellShareOrderQueue().isEmpty()) {
                             shareService.updateSharePrice(share, -0.01);
                             log.info("Fiyat azaldı...");
@@ -714,7 +714,7 @@ public class StockApplication implements CommandLineRunner {
                             shareService.updateSharePrice(share, 0.01);
                             log.info("Fiyat arttı...");
                         }
-                    }else {
+                    } else {
                         if (!buyLevel.getBuyShareOrderQueue().isEmpty() && sellLevel.getSellShareOrderQueue().isEmpty()) {
                             shareService.updateSharePrice(share, 0.01);
                             log.info("Fiyat arttı...");
@@ -732,6 +732,7 @@ public class StockApplication implements CommandLineRunner {
 
         Thread openingPrice = new Thread(() -> {
             Share share = Database.shareMap.get(ShareEnum.ALPHA);
+
             shareService.setOpeningPrice(share, share.getStartPrice());
             Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
             ShareOrder shareOrder = null;
@@ -754,6 +755,22 @@ public class StockApplication implements CommandLineRunner {
                 ex.printStackTrace();
             }
         });
+
+        Thread init = new Thread(() -> {
+            Database.shareMap.put(ShareEnum.ALPHA, new Share(ShareEnum.ALPHA, 1.0, 1.0, 1.01, ShareSessionType.OPENING));
+        /*Database.shareMap.put(ShareEnum.BETA, new Share(ShareEnum.BETA, 1.0));
+        Database.shareMap.put(ShareEnum.GAMMA, new Share(ShareEnum.GAMMA, 1.0, 1.0, 1.01));*/
+
+            Database.shareMap.get(ShareEnum.ALPHA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.ALPHA));
+        /*Database.shareMap.get(ShareEnum.BETA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.BETA));
+        Database.shareMap.get(ShareEnum.GAMMA).getDepth().getLevelMap(Database.shareMap.get(ShareEnum.GAMMA));*/
+            //shareService.setRandomShareStartPrice(Database.shareMap.get(ShareEnum.ALPHA));
+
+
+        });
+
+        init.start();
+        init.join();
 
         a.start();
         b.start();

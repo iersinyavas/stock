@@ -18,6 +18,8 @@ public class Share {
     private Double sellPrice;
     private ShareSessionType shareSessionType;
     private Depth depth = new Depth();
+    private Double max;
+    private Double min;
 
     public Share(ShareEnum shareCode, Double startPrice, Double buyPrice, Double sellPrice, ShareSessionType shareSessionType) {
         this.shareCode = shareCode;
