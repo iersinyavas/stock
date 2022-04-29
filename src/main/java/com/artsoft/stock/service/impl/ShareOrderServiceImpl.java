@@ -18,7 +18,6 @@ import com.artsoft.stock.util.exception.WrongLotInformationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.artsoft.stock.util.GeneralEnumeration.ShareEnum;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -33,7 +32,6 @@ public class ShareOrderServiceImpl implements ShareOrderService {
     Random random = new Random();
 
     @Override
-    @Transactional(readOnly = true)
     public synchronized ShareOrder createShareOrder(Customer customer) throws InsufficientBalanceException, WrongLotInformationException, NotHaveShareException {
         ShareOrder shareOrder = new ShareOrder();
         shareOrder.setCustomer(customer);
@@ -125,7 +123,6 @@ public class ShareOrderServiceImpl implements ShareOrderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public void processedShareOrders(Share share, ShareOrder buyShareOrder, ShareOrder sellShareOrder) {
         buyShareOrder.setShareOrderOperationStatus(GeneralEnumeration.ShareOrderOperationStatus.PROCESSING);
         sellShareOrder.setShareOrderOperationStatus(GeneralEnumeration.ShareOrderOperationStatus.PROCESSING);
